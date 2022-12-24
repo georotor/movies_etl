@@ -1,0 +1,6 @@
+Dockerfile
+venv
+state.json
+.vscode
+__pycache__
+
