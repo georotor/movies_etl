@@ -12,7 +12,7 @@ cp .env.example .env
 cp .env.db.example .env.db
 ```
 
-База данных в Postgresql `movies_database` и индекс `movies` в Elasticsearch разворачиваются при старте контейнеров:
+Схема `movies_database` с данными в Postgresql и индекс `movies` в Elasticsearch разворачиваются при старте контейнеров:
 ```bash
 docker-compose up --build
 ```
