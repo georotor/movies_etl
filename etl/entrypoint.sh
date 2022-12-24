@@ -7,8 +7,6 @@ while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do
 done
 echo " started"
 
-./es_schema.sh
-
 exec "$@"
 
 while true

@@ -1,4 +1,13 @@
-curl -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
+#!/bin/sh
+
+while ! curl -s -I http://localhost:9200 | grep -q 'HTTP/1.1 200 OK'
+do
+  echo "$(date) Elasticsearch - still trying"
+  sleep 1
+done
+echo "$(date) Elasticsearch - connected successfully"
+
+curl -XPUT http://localhost:9200/movies -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",
@@ -106,3 +115,6 @@ curl -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
     }
   }
 }'
+
+exec "$@"
+
