@@ -27,20 +27,25 @@ class Transform:
     """Класс подготовки данных"""
 
     def __init__(self, logger=None):
-        self.filtred_ids = set()
+        self.filtred = set()
 
     @coroutine
     def filter_ids(self, target):
-        """Фильтр, исключающий ID кинопроизведений, которые уже были
-        загружены в течении текущего сеанса"""
+        """Фильтр по id + modified, исключающий кинопроизведения,
+        которые уже были загружены в течении текущего сеанса"""
 
-        while ids := (yield):
-            res = set(ids) - self.filtred_ids
-            logging.info("Отфильтровано ID: {0}".format(len(ids) - len(res)))
-            self.filtred_ids.update(res)
+        while rows := (yield):
+            ids = set((x["id"], x["modified"]) for x in rows)
+            res = ids - self.filtred
+            logging.info(
+                "Фильтр: получил {0}, отфильтровал: {1}, осталось {2}".format(
+                    len(rows), len(ids) - len(res), len(res)
+                )
+            )
+            self.filtred.update(res)
 
             if len(res) > 0:
-                target.send(tuple(res))
+                target.send(tuple(x[0] for x in res))
 
     @coroutine
     def transform(self, target):

@@ -5,14 +5,13 @@ import psycopg2
 from utils.coroutine import coroutine
 from utils.state import State, BaseStorage
 from psycopg2.extras import DictCursor
+from psycopg2.extensions import cursor
 
 
 class PostgresExtractor:
     """Класс используется для выгрузки данных из Postgres"""
 
-    def __init__(
-        self, dsl: dict, state_storage: BaseStorage, logger=None, page_size=100
-    ):
+    def __init__(self, dsl: dict, state_storage: BaseStorage, page_size=100):
         self.connection = None
         self.dsl = dsl
         self.page_size = page_size
@@ -25,7 +24,7 @@ class PostgresExtractor:
         if self.connection and not self.connection.closed:
             self.connection.close()
 
-    def cursor(self):
+    def cursor(self) -> cursor:
         if not self.connection or self.connection.closed:
             self.connect()
         return self.connection.cursor(cursor_factory=DictCursor)
@@ -36,7 +35,7 @@ class PostgresExtractor:
         max_time=300,
         jitter=backoff.random_jitter,
     )
-    def execute(self, query: str, data: tuple):
+    def execute(self, query: str, data: tuple) -> list:
         """Получение данных из Postgres с контролем состояния"""
         with self.cursor() as cur:
             cur.execute(query, data)
@@ -70,11 +69,9 @@ class PostgresExtractor:
             if len(table_data) == 0:
                 break
 
-            ids = tuple(x["id"] for x in table_data)
+            logging.info("Загружено ID: {0}".format(len(table_data)))
 
-            logging.info("Загружено ID: {0}".format(len(ids)))
-
-            target.send(ids)
+            target.send(table_data)
 
             last_modified = table_data[-1]["modified"]
             self.state.set_state(
@@ -86,7 +83,7 @@ class PostgresExtractor:
     def get_ids_by_related_table(self, related_table: str, target):
         """Выгрузка id кинопроизведений из таблиц связей других сущностей (person, genre)"""
         query = """
-            SELECT fw.id
+            SELECT DISTINCT fw.id, fw.modified
             FROM content.film_work fw
             LEFT JOIN content.{0}_film_work pfw ON pfw.film_work_id = fw.id
             WHERE pfw.{0}_id IN %s and fw.id > %s
@@ -96,7 +93,8 @@ class PostgresExtractor:
             related_table
         )
 
-        while related_ids := (yield):
+        while related_data := (yield):
+            related_ids = tuple(x["id"] for x in related_data)
             last_id = "00000000-0000-0000-0000-000000000000"
             while True:
                 data = (related_ids, last_id, self.page_size)
@@ -112,7 +110,7 @@ class PostgresExtractor:
                 )
 
                 last_id = film_work_ids[-1]["id"]
-                target.send(tuple(x["id"] for x in film_work_ids))
+                target.send(film_work_ids)
 
     @coroutine
     def extract(self, target):
