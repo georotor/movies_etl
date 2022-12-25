@@ -59,7 +59,7 @@ def is_run():
         return True
 
 
-if __name__ == "__main__":
+def main():
     if is_run():
         logging.warning("Уже работаем")
         exit()
@@ -83,3 +83,7 @@ if __name__ == "__main__":
         )
 
         load_from_pg(dsl, es)
+
+
+if __name__ == "__main__":
+    main()

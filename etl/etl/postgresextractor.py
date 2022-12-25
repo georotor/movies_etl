@@ -6,6 +6,7 @@ from utils.coroutine import coroutine
 from utils.state import State, BaseStorage
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import cursor
+from collections.abc import Coroutine
 
 
 class PostgresExtractor:
@@ -41,9 +42,16 @@ class PostgresExtractor:
             cur.execute(query, data)
             return cur.fetchall()
 
-    def get_mod_data(self, target, table: str):
+    def key_state(self, table: str) -> str:
+        """Формирования ключа для сохранения состояния"""
+        res = "_last_modified"
+        if table:
+            res = table + res
+        return res
+
+    def get_mod_data(self, target: Coroutine[None, list, None], table: str):
         """Выгрузка обновленных id из таблицы table"""
-        last_modified = self.state.get_state(table + "_last_modified")
+        last_modified = self.state.get_state(self.key_state(table))
         if not last_modified:
             last_modified = datetime.datetime(1900, 1, 1, tzinfo=datetime.timezone.utc)
 
@@ -75,12 +83,12 @@ class PostgresExtractor:
 
             last_modified = table_data[-1]["modified"]
             self.state.set_state(
-                key=table + "_last_modified",
+                key=self.key_state(table),
                 value=str(last_modified.replace(tzinfo=datetime.timezone.utc)),
             )
 
     @coroutine
-    def get_ids_by_related_table(self, related_table: str, target):
+    def get_ids_by_related_table(self, related_table: str, target: Coroutine[None, list, None]):
         """Выгрузка id кинопроизведений из таблиц связей других сущностей (person, genre)"""
         query = """
             SELECT DISTINCT fw.id, fw.modified
@@ -113,7 +121,7 @@ class PostgresExtractor:
                 target.send(film_work_ids)
 
     @coroutine
-    def extract(self, target):
+    def extract(self, target: Coroutine[None, list, None]):
         """Выгрузка всех данных кинопроизведений"""
         query = """
             SELECT

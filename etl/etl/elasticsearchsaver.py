@@ -8,7 +8,7 @@ from typing import Any
 class ElasticsearchSaver:
     """Класс используется для обновления данных в Elasticsearch"""
 
-    def __init__(self, es_host: str, logger=None):
+    def __init__(self, es_host: str):
         self.es = Elasticsearch(es_host)
 
     def close(self):
@@ -24,7 +24,7 @@ class ElasticsearchSaver:
     def bulk(self, index: str, operations: list) -> Any:
         """Отправка данных в Elasticsearch с контролем состояния"""
         return self.es.bulk(
-            index="movies", operations=operations, filter_path="items.*.error"
+            index=index, operations=operations, filter_path="items.*.error"
         )
 
     @coroutine

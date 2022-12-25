@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Coroutine
 from utils.coroutine import coroutine
 from pydantic import BaseModel
 from typing import List
@@ -30,7 +31,7 @@ class Transform:
         self.filtred = set()
 
     @coroutine
-    def filter_ids(self, target):
+    def filter_ids(self, target: Coroutine[None, tuple, None]):
         """Фильтр по id + modified, исключающий кинопроизведения,
         которые уже были загружены в течении текущего сеанса"""
 
@@ -48,7 +49,7 @@ class Transform:
                 target.send(tuple(x[0] for x in res))
 
     @coroutine
-    def transform(self, target):
+    def transform(self, target: Coroutine[None, list, None]):
         """Подготовка данных для bulk запроса в Elasticsearch"""
         while rows := (yield):
             data = []
