@@ -1,6 +1,6 @@
-import backoff
 import logging
 from elasticsearch import Elasticsearch, ConnectionError, ConnectionTimeout
+from utils.backoff import backoff
 from utils.coroutine import coroutine
 from typing import Any
 
@@ -15,11 +15,8 @@ class ElasticsearchSaver:
         if self.es:
             self.es.close()
 
-    @backoff.on_exception(
-        backoff.expo,
-        (ConnectionError, ConnectionTimeout),
-        max_time=300,
-        jitter=backoff.random_jitter,
+    @backoff(
+        exceptions=(ConnectionError, ConnectionTimeout)
     )
     def bulk(self, index: str, operations: list) -> Any:
         """Отправка данных в Elasticsearch с контролем состояния"""
