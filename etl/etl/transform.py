@@ -1,27 +1,8 @@
 import logging
 from collections.abc import Coroutine
+from etl.models import Movie
 from utils.coroutine import coroutine
 from pydantic import BaseModel
-from typing import List
-from uuid import UUID
-
-
-class Person(BaseModel):
-    id: UUID
-    name: str
-
-
-class Movie(BaseModel):
-    id: UUID
-    imdb_rating: float
-    genre: List[str]
-    title: str
-    description: str
-    director: List[str]
-    actors_names: List[str]
-    writers_names: List[str]
-    actors: List[Person]
-    writers: List[Person]
 
 
 class Transform:
@@ -49,7 +30,7 @@ class Transform:
                 target.send(tuple(x[0] for x in res))
 
     @coroutine
-    def transform(self, target: Coroutine[None, list, None]):
+    def transform_movies(self, target: Coroutine[None, list, None]):
         """Подготовка данных для bulk запроса в Elasticsearch"""
         while rows := (yield):
             data = []
@@ -66,6 +47,20 @@ class Transform:
 
                 data.append(action)
                 data.append(movie.dict())
+
+            target.send(data)
+
+    @coroutine
+    def transform_basic(self, index: str, model: BaseModel, target: Coroutine[None, list, None]):
+        """Подготовка данных для bulk запроса в Elasticsearch"""
+        while rows := (yield):
+            data = []
+            for row in rows:
+                action = {"index": {"_index": index, "_id": row["id"]}}
+                _model = model(**row)
+
+                data.append(action)
+                data.append(_model.dict())
 
             target.send(data)
 

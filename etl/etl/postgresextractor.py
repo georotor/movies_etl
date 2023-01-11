@@ -7,6 +7,7 @@ from utils.state import State, BaseStorage
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import cursor
 from collections.abc import Coroutine
+from typing import Tuple
 
 
 class PostgresExtractor:
@@ -46,7 +47,7 @@ class PostgresExtractor:
             res = table + res
         return res
 
-    def get_mod_data(self, target: Coroutine[None, list, None], table: str):
+    def get_mod_data(self, target: Tuple[Coroutine[None, list, None]], table: str):
         """Выгрузка обновленных id из таблицы table"""
         last_modified = self.state.get_state(self.key_state(table))
         if not last_modified:
@@ -76,7 +77,8 @@ class PostgresExtractor:
 
             logging.info("Загружено ID: {0}".format(len(table_data)))
 
-            target.send(table_data)
+            for coro in target:
+                coro.send(table_data)
 
             last_modified = table_data[-1]["modified"]
             self.state.set_state(
@@ -118,35 +120,11 @@ class PostgresExtractor:
                 target.send(film_work_ids)
 
     @coroutine
-    def extract(self, target: Coroutine[None, list, None]):
-        """Выгрузка всех данных кинопроизведений"""
-        query = """
-            SELECT
-            fw.id,
-            fw.title,
-            fw.description,
-            fw.rating as imdb_rating,
-            fw.type,
-            COALESCE (
-                json_agg(
-                    DISTINCT jsonb_build_object(
-                        'role', pfw.role,
-                        'id', p.id,
-                        'name', p.full_name
-                    )
-                ) FILTER (WHERE p.id is not null),
-                '[]'
-            ) as persons,
-            array_agg(DISTINCT g.name) as genres
-            FROM content.film_work fw
-            LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
-            LEFT JOIN content.person p ON p.id = pfw.person_id
-            LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
-            LEFT JOIN content.genre g ON g.id = gfw.genre_id
-            WHERE fw.id IN %s
-            GROUP BY fw.id
-        """
-
+    def extract(self, target: Coroutine[None, list, None], query: str):
+        """Выгрузка всех данных по запросу query"""
         while ids := (yield):
+            if isinstance(ids, list):
+                ids = tuple(x[0] for x in ids)
+
             res = self.execute(query, (ids,))
             target.send(res)

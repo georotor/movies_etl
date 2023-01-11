@@ -3,8 +3,10 @@ import os
 import socket
 from dotenv import load_dotenv
 from etl.elasticsearchsaver import ElasticsearchSaver
+from etl.models import Genre, Person
 from etl.postgresextractor import PostgresExtractor
 from etl.transform import Transform
+from etl.sqlselect import SELECT_MOVIES, SELECT_GENRES, SELECT_PERSONS
 from utils.state import JsonFileStorage
 
 
@@ -18,30 +20,51 @@ def load_from_pg(dsl: dict, es: str):
     es = ElasticsearchSaver(es_host=es)
     transform = Transform()
 
-    """ 
-    Основная цепочка корутин для обработки кинопроизведений из всех таблиц,
-    собирается с конца.
-    """
+    # Корутина для записи данных в ES
     data_save = es.save()
-    data_transform = transform.transform(data_save)
-    data_extract = pg.extract(data_transform)
-    ids_filter = transform.filter_ids(data_extract)
 
-    # Пайплайн переноса данных для person и genre
-    for table in ("person", "genre"):
+    """ 
+    Цепочка корутин для обработки кинопроизведений из всех таблиц, собирается с конца.
+    """
+    fw_data_transform = transform.transform_movies(data_save)
+    fw_data_extract = pg.extract(
+        query=SELECT_MOVIES,
+        target=fw_data_transform
+    )
+    fw_ids_filter = transform.filter_ids(fw_data_extract)
+
+    """
+    Цепочка корутин для обработки жанров
+    """
+    genre_data_transform = transform.transform_basic(index="genres", model=Genre, target=data_save)
+    genre_data_extract = pg.extract(query=SELECT_GENRES, target=genre_data_transform)
+
+    """
+    Цепочка корутин для обработки персон
+    """
+    person_data_transform = transform.transform_basic(index="persons", model=Person, target=data_save)
+    person_data_extract = pg.extract(query=SELECT_PERSONS, target=person_data_transform)
+
+    """
+    Пайплайн переноса данных для person и genre
+    """
+    for table, pipeline in (("genre", genre_data_extract), ("person", person_data_extract)):
         ids_by_related_table = pg.get_ids_by_related_table(
             related_table=table,
-            target=ids_filter
+            target=fw_ids_filter
         )
+        # Ищем обновленные строки и запускаем пайплайны для самой таблицы и связанных кинопроизведений
         pg.get_mod_data(
             table=table,
-            target=ids_by_related_table
+            target=(pipeline, ids_by_related_table)
         )
 
-    # Пайплайн переноса данных для film_work
+    """
+    Пайплайн переноса данных для film_work
+    """
     pg.get_mod_data(
         table="film_work",
-        target=ids_filter
+        target=(fw_ids_filter, )
     )
 
     pg.disconnect()
