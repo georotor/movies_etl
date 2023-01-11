@@ -26,18 +26,20 @@ SELECT_MOVIES = """
 """
 
 SELECT_GENRES = """
-    SELECT 
+    SELECT DISTINCT
     g.id,
     g.name,
     g.description
     FROM content.genre g
+    INNER JOIN content.genre_film_work gfw ON g.id=gfw.genre_id
     WHERE g.id IN %s
 """
 
 SELECT_PERSONS = """
-    SELECT 
+    SELECT DISTINCT
     p.id,
     p.full_name as name
     FROM content.person p
+    INNER JOIN content.person_film_work pfw ON p.id=pfw.person_id
     WHERE p.id IN %s
 """
