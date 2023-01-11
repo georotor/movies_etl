@@ -18,32 +18,30 @@ def load_from_pg(dsl: dict, es: str):
     es = ElasticsearchSaver(es_host=es)
     transform = Transform()
 
+    """ 
+    Основная цепочка корутин для обработки кинопроизведений из всех таблиц,
+    собирается с конца.
+    """
+    data_save = es.save()
+    data_transform = transform.transform(data_save)
+    data_extract = pg.extract(data_transform)
+    ids_filter = transform.filter_ids(data_extract)
+
     # Пайплайн переноса данных для person и genre
     for table in ("person", "genre"):
+        ids_by_related_table = pg.get_ids_by_related_table(
+            related_table=table,
+            target=ids_filter
+        )
         pg.get_mod_data(
             table=table,
-            target=pg.get_ids_by_related_table(
-                related_table=table,
-                target=transform.filter_ids(
-                    pg.extract(
-                        transform.transform(
-                            es.save()
-                        )
-                    )
-                ),
-            ),
+            target=ids_by_related_table
         )
 
     # Пайплайн переноса данных для film_work
     pg.get_mod_data(
         table="film_work",
-        target=transform.filter_ids(
-            pg.extract(
-                transform.transform(
-                    es.save()
-                )
-            )
-        ),
+        target=ids_filter
     )
 
     pg.disconnect()
