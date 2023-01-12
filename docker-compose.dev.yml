@@ -40,6 +40,18 @@ services:
       - ./.env.db
     depends_on:
       - elastic
+  redis:
+    image: redis:7.0.7
+    ports:
+      - 6379:6379
+  redis-commander:
+    build: https://github.com/joeferner/redis-commander.git
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - 8081:8081
+    depends_on:
+      - redis
   etl:
     build: ./etl
     container_name: etl

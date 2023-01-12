@@ -39,7 +39,7 @@ class Transform:
                 movie = Movie(
                     id=row["id"],
                     imdb_rating=row["imdb_rating"] if row["imdb_rating"] else 0,
-                    genre=row["genres"] if row["genres"][0] else [],
+                    genre=row["genres"],
                     title=row["title"],
                     description=row["description"],
                     **self.persons_parse(row["persons"]),
@@ -72,11 +72,13 @@ class Transform:
             "writers_names": [],
             "actors": [],
             "writers": [],
+            "directors": []
         }
         for person in persons:
             match person["role"]:
                 case "director":
                     res["director"].append(person["name"])
+                    res["directors"].append({"id": person["id"], "name": person["name"]})
                 case "writer":
                     res["writers_names"].append(person["name"])
                     res["writers"].append({"id": person["id"], "name": person["name"]})

@@ -59,7 +59,17 @@ curl -XPUT http://localhost:9200/movies -H 'Content-Type: application/json' -d'
         "type": "float"
       },
       "genre": {
-        "type": "keyword"
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en"
+          }
+        }
       },
       "title": {
         "type": "text",
@@ -100,6 +110,19 @@ curl -XPUT http://localhost:9200/movies -H 'Content-Type: application/json' -d'
         }
       },
       "writers": {
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en"
+          }
+        }
+      },
+      "directors": {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
