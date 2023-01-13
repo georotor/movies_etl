@@ -1,13 +1,13 @@
 #!/bin/sh
 
-while ! curl -s -I http://localhost:9200 | grep -q 'HTTP/1.1 200 OK'
+while ! curl -s -I ${ES_HOST} | grep -q 'HTTP/1.1 200 OK'
 do
   echo "$(date) Elasticsearch - still trying"
   sleep 1
 done
 echo "$(date) Elasticsearch - connected successfully"
 
-curl -XPUT http://localhost:9200/movies -H 'Content-Type: application/json' -d'
+curl -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",
@@ -139,7 +139,7 @@ curl -XPUT http://localhost:9200/movies -H 'Content-Type: application/json' -d'
   }
 }'
 
-curl -XPUT http://localhost:9200/genres -H 'Content-Type: application/json' -d'
+curl -XPUT ${ES_HOST}/genres -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",
@@ -204,7 +204,7 @@ curl -XPUT http://localhost:9200/genres -H 'Content-Type: application/json' -d'
   }
 }'
 
-curl -XPUT http://localhost:9200/persons -H 'Content-Type: application/json' -d'
+curl -XPUT ${ES_HOST}/persons -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",

@@ -2,10 +2,7 @@ version: '3'
 services:
   elastic:
     image: elasticsearch:7.17.8
-    entrypoint: ["/opt/es_entrypoint.sh"]
     volumes:
-      - ./es/entrypoint.sh:/opt/es_entrypoint.sh
-      - ./es/schema.sh:/opt/es_schema.sh
       - elastic_data:/usr/share/elasticsearch/data
     environment:
       - discovery.type=single-node
