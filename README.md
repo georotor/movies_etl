@@ -19,3 +19,5 @@ docker-compose up --build
 
 Перенос данных выполняется с интервалом указанным в переменной `INTERVAL` (по умолчанию 5m).
 
+export DOCKER_BUILDKIT=0
+export COMPOSE_DOCKER_CLI_BUILD=0

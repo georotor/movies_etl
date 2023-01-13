@@ -5,7 +5,7 @@ WORKDIR /opt/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY requirements.txt requirements.txt
+COPY etl/requirements.txt requirements.txt
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
      curl \
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY etl/ /opt/app/
 
 RUN groupadd -r bob && useradd -d /opt/app -r -g bob bob \
      && chown bob:bob -R /opt/app

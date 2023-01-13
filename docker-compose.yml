@@ -33,7 +33,7 @@ services:
     depends_on:
       - elastic
   etl:
-    build: ./etl
+    build: .
     container_name: etl
     env_file:
       - ./.env

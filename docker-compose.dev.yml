@@ -45,7 +45,8 @@ services:
     ports:
       - 6379:6379
   redis-commander:
-    build: https://github.com/joeferner/redis-commander.git
+    # build: https://github.com/joeferner/redis-commander.git
+    build: git@github.com:joeferner/redis-commander.git
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:
@@ -53,7 +54,7 @@ services:
     depends_on:
       - redis
   etl:
-    build: ./etl
+    build: .
     container_name: etl
     env_file:
       - ./.env
