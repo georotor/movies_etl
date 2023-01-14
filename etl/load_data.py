@@ -15,7 +15,7 @@ def load_from_pg(dsl: dict, es: str):
     pg = PostgresExtractor(
         dsl=dsl,
         state_storage=JsonFileStorage(file_path="state.json"),
-        page_size=100
+        page_size=int(os.environ.get("PAGE_SIZE", 100))
     )
     es = ElasticsearchSaver(es_host=es)
     transform = Transform()
