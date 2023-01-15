@@ -7,7 +7,7 @@ do
 done
 echo "$(date) Elasticsearch - connected successfully"
 
-curl -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
+curl -s -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",
@@ -139,7 +139,7 @@ curl -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
   }
 }'
 
-curl -XPUT ${ES_HOST}/genres -H 'Content-Type: application/json' -d'
+curl -s -XPUT ${ES_HOST}/genres -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",
@@ -187,6 +187,9 @@ curl -XPUT ${ES_HOST}/genres -H 'Content-Type: application/json' -d'
       "id": {
         "type": "keyword"
       },
+      "films_count": {
+        "type": "integer"
+      },
       "name": {
         "type": "text",
         "analyzer": "ru_en",
@@ -204,7 +207,7 @@ curl -XPUT ${ES_HOST}/genres -H 'Content-Type: application/json' -d'
   }
 }'
 
-curl -XPUT ${ES_HOST}/persons -H 'Content-Type: application/json' -d'
+curl -s -XPUT ${ES_HOST}/persons -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "refresh_interval": "1s",

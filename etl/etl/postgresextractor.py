@@ -7,7 +7,6 @@ from utils.state import State, BaseStorage
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import cursor
 from collections.abc import Coroutine
-from typing import Tuple
 
 
 class PostgresExtractor:
@@ -47,7 +46,7 @@ class PostgresExtractor:
             res = table + res
         return res
 
-    def get_mod_data(self, target: Tuple[Coroutine[None, list, None]], table: str):
+    def get_mod_data(self, target: tuple[Coroutine[None, list, None]], table: str):
         """Выгрузка обновленных id из таблицы table"""
         last_modified = self.state.get_state(self.key_state(table))
         if not last_modified:

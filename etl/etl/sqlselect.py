@@ -34,13 +34,18 @@ SELECT_MOVIES = """
 """
 
 SELECT_GENRES = """
-    SELECT DISTINCT
+    SELECT
     g.id,
     g.name,
-    g.description
+    g.description,
+    COUNT(*) as films_count
     FROM content.genre g
     INNER JOIN content.genre_film_work gfw ON g.id=gfw.genre_id
     WHERE g.id IN %s
+    GROUP BY
+    g.id,
+    g.name,
+    g.description
 """
 
 SELECT_PERSONS = """
