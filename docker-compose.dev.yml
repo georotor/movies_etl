@@ -2,10 +2,7 @@ version: '3'
 services:
   elastic:
     image: elasticsearch:7.17.8
-    entrypoint: ["/opt/es_entrypoint.sh"]
     volumes:
-      - ./es/entrypoint.sh:/opt/es_entrypoint.sh
-      - ./es/schema.sh:/opt/es_schema.sh
       - elastic_data:/usr/share/elasticsearch/data
     environment:
       - discovery.type=single-node
@@ -40,8 +37,21 @@ services:
       - ./.env.db
     depends_on:
       - elastic
+  redis:
+    image: redis:7.0.7
+    ports:
+      - 6379:6379
+  redis-commander:
+    # build: https://github.com/joeferner/redis-commander.git
+    build: git@github.com:joeferner/redis-commander.git
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - 8081:8081
+    depends_on:
+      - redis
   etl:
-    build: ./etl
+    build: .
     container_name: etl
     env_file:
       - ./.env

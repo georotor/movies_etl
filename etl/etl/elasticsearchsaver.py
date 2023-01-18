@@ -18,17 +18,17 @@ class ElasticsearchSaver:
     @backoff(
         exceptions=(ConnectionError, ConnectionTimeout)
     )
-    def bulk(self, index: str, operations: list) -> Any:
+    def bulk(self, operations: list) -> Any:
         """Отправка данных в Elasticsearch с контролем состояния"""
         return self.es.bulk(
-            index=index, operations=operations, filter_path="items.*.error"
+            operations=operations, filter_path="items.*.error"
         )
 
     @coroutine
     def save(self):
         """Корутина для пакетной загрузки данных в Elasticsearch"""
         while data := (yield):
-            error = self.bulk(index="movies", operations=data)
+            error = self.bulk(operations=data)
             if error:
                 logging.error("Не удалось обновить записи в Elasticsearch")
                 logging.error(str(error))
