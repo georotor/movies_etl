@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Coroutine
-from etl.models import Movie
+from etl.models import Movie, Person, Genre
 from utils.coroutine import coroutine
 from pydantic import BaseModel
 
@@ -51,7 +51,7 @@ class Transform:
             target.send(data)
 
     @coroutine
-    def transform_basic(self, index: str, model: BaseModel, target: Coroutine[None, list, None]):
+    def transform_basic(self, index: str, model: Movie | Person | Genre, target: Coroutine[None, list, None]):
         """Подготовка данных для bulk запроса в Elasticsearch"""
         while rows := (yield):
             data = []

@@ -3,7 +3,7 @@ import os
 import socket
 from dotenv import load_dotenv
 from etl.elasticsearchsaver import ElasticsearchSaver
-from etl.models import Genre, Person
+from etl.models import Genre, Person, Movie
 from etl.postgresextractor import PostgresExtractor
 from etl.transform import Transform
 from etl.sqlselect import SELECT_MOVIES, SELECT_GENRES, SELECT_PERSONS
@@ -26,7 +26,7 @@ def load_from_pg(dsl: dict, es: str):
     """ 
     Цепочка корутин для обработки кинопроизведений из всех таблиц, собирается с конца.
     """
-    fw_data_transform = transform.transform_movies(data_save)
+    fw_data_transform = transform.transform_basic(index="movies", model=Movie, target=data_save)
     fw_data_extract = pg.extract(
         query=SELECT_MOVIES,
         target=fw_data_transform
