@@ -1,12 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from uuid import UUID
 
 
 class Genre(BaseModel):
     id: UUID
-    films_count: int
     name: str
     description: str
+    films_count: int
+
+
+class GenreShort(BaseModel):
+    id: UUID
+    name: str
 
 
 class Person(BaseModel):
@@ -16,8 +21,8 @@ class Person(BaseModel):
 
 class Movie(BaseModel):
     id: UUID
-    imdb_rating: float
-    genre: list[dict]
+    imdb_rating: float = 0.0
+    genre: list[GenreShort]
     title: str
     description: str
     director: list[str]
@@ -26,3 +31,7 @@ class Movie(BaseModel):
     actors: list[Person]
     writers: list[Person]
     directors: list[Person]
+
+    @validator('imdb_rating', pre=True)
+    def check_imdb_rating(cls, v):
+        return v or 0.0

@@ -3,7 +3,7 @@ import os
 import socket
 from dotenv import load_dotenv
 from etl.elasticsearchsaver import ElasticsearchSaver
-from etl.models import Genre, Person
+from etl.models import Genre, Person, Movie
 from etl.postgresextractor import PostgresExtractor
 from etl.transform import Transform
 from etl.sqlselect import SELECT_MOVIES, SELECT_GENRES, SELECT_PERSONS
@@ -26,32 +26,32 @@ def load_from_pg(dsl: dict, es: str):
     """ 
     Цепочка корутин для обработки кинопроизведений из всех таблиц, собирается с конца.
     """
-    fw_data_transform = transform.transform_movies(data_save)
-    fw_data_extract = pg.extract(
+    movies_transform = transform.transform(index="movies", model=Movie, target=data_save)
+    movies_extract = pg.extract(
         query=SELECT_MOVIES,
-        target=fw_data_transform
+        target=movies_transform
     )
-    fw_ids_filter = transform.filter_ids(fw_data_extract)
+    movies_filter = transform.filter_ids(movies_extract)
 
     """
     Цепочка корутин для обработки жанров
     """
-    genre_data_transform = transform.transform_basic(index="genres", model=Genre, target=data_save)
-    genre_data_extract = pg.extract(query=SELECT_GENRES, target=genre_data_transform)
+    genres_transform = transform.transform(index="genres", model=Genre, target=data_save)
+    genres_extract = pg.extract(query=SELECT_GENRES, target=genres_transform)
 
     """
     Цепочка корутин для обработки персон
     """
-    person_data_transform = transform.transform_basic(index="persons", model=Person, target=data_save)
-    person_data_extract = pg.extract(query=SELECT_PERSONS, target=person_data_transform)
+    persons_transform = transform.transform(index="persons", model=Person, target=data_save)
+    persons_extract = pg.extract(query=SELECT_PERSONS, target=persons_transform)
 
     """
     Пайплайн переноса данных для person и genre
     """
-    for table, pipeline in (("genre", genre_data_extract), ("person", person_data_extract)):
+    for table, pipeline in (("genre", genres_extract), ("person", persons_extract)):
         ids_by_related_table = pg.get_ids_by_related_table(
             related_table=table,
-            target=fw_ids_filter
+            target=movies_filter
         )
         # Ищем обновленные строки и запускаем пайплайны для самой таблицы и связанных кинопроизведений
         pg.get_mod_data(
@@ -64,7 +64,7 @@ def load_from_pg(dsl: dict, es: str):
     """
     pg.get_mod_data(
         table="film_work",
-        target=(fw_ids_filter, )
+        target=(movies_filter,)
     )
 
     pg.disconnect()

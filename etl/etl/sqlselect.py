@@ -1,20 +1,7 @@
 SELECT_MOVIES = """
     SELECT
     fw.id,
-    fw.title,
-    fw.description,
     fw.rating as imdb_rating,
-    fw.type,
-    COALESCE (
-        json_agg(
-            DISTINCT jsonb_build_object(
-                'role', pfw.role,
-                'id', p.id,
-                'name', p.full_name
-            )
-        ) FILTER (WHERE p.id is not null),
-        '[]'
-    ) as persons,
     COALESCE (
         jsonb_agg(
             DISTINCT jsonb_build_object(
@@ -23,7 +10,54 @@ SELECT_MOVIES = """
             )
         ) FILTER (WHERE g.id is not null),
         '[]'
-    ) as genres
+    ) as genre,
+    fw.title,
+    fw.description,
+    COALESCE (
+        jsonb_agg(
+            distinct p.full_name
+        ) filter (where pfw.role = 'director'),
+        '[]'
+    ) as director,
+    COALESCE (
+        jsonb_agg(
+            distinct p.full_name
+        ) filter (where pfw.role = 'actor'),
+        '[]'
+    ) as actors_names,
+    COALESCE (
+        jsonb_agg(
+            distinct p.full_name
+        ) filter (where pfw.role = 'writer'),
+        '[]'
+    ) as writers_names,
+    COALESCE (
+        json_agg(
+            DISTINCT jsonb_build_object(
+                'id', p.id,
+                'name', p.full_name
+            )
+        ) FILTER (WHERE pfw.role = 'actor'),
+        '[]'
+    ) as actors,
+    COALESCE (
+        json_agg(
+            DISTINCT jsonb_build_object(
+                'id', p.id,
+                'name', p.full_name
+            )
+        ) FILTER (WHERE pfw.role = 'writer'),
+        '[]'
+    ) as writers,
+    COALESCE (
+        json_agg(
+            DISTINCT jsonb_build_object(
+                'id', p.id,
+                'name', p.full_name
+            )
+        ) FILTER (WHERE pfw.role = 'director'),
+        '[]'
+    ) as directors
     FROM content.film_work fw
     LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
     LEFT JOIN content.person p ON p.id = pfw.person_id
