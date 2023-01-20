@@ -1,7 +1,7 @@
+import backoff
 import datetime
 import logging
 import psycopg2
-from utils.backoff import backoff
 from utils.coroutine import coroutine
 from utils.state import State, BaseStorage
 from psycopg2.extras import DictCursor
@@ -30,8 +30,11 @@ class PostgresExtractor:
             self.connect()
         return self.connection.cursor(cursor_factory=DictCursor)
 
-    @backoff(
-        exceptions=(psycopg2.OperationalError, psycopg2.DatabaseError)
+    @backoff.on_exception(
+        backoff.expo,
+        (psycopg2.OperationalError, psycopg2.DatabaseError),
+        max_time=300,
+        jitter=backoff.random_jitter,
     )
     def execute(self, query: str, data: tuple) -> list:
         """Получение данных из Postgres с контролем состояния"""
