@@ -58,6 +58,9 @@ curl -s -XPUT ${ES_HOST}/movies -H 'Content-Type: application/json' -d'
       "imdb_rating": {
         "type": "float"
       },
+      "length": {
+        "type": "integer"
+      },
       "genre": {
         "type": "nested",
         "dynamic": "strict",

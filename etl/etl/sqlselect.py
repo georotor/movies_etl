@@ -2,6 +2,7 @@ SELECT_MOVIES = """
     SELECT
     fw.id,
     fw.rating as imdb_rating,
+    fw.length,
     COALESCE (
         jsonb_agg(
             DISTINCT jsonb_build_object(

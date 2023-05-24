@@ -22,6 +22,7 @@ class Person(BaseModel):
 class Movie(BaseModel):
     id: UUID
     imdb_rating: float = 0.0
+    length: int = 0
     genre: list[GenreShort]
     title: str
     description: str
@@ -35,3 +36,7 @@ class Movie(BaseModel):
     @validator('imdb_rating', pre=True)
     def check_imdb_rating(cls, v):
         return v or 0.0
+
+    @validator('length', pre=True)
+    def check_length(cls, v):
+        return v or 0
