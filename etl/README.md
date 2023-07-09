@@ -1,4 +1,4 @@
-# Решение проектного задания ETL
+# ETL (postgresql -> elasticsearch)
 
 Зависимости указаны в requirements.txt
 
@@ -10,4 +10,3 @@
 ```bash
 cp .env.example .env
 ```
-
