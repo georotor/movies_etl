@@ -1,5 +1,11 @@
 # Movies: ETL для кинотеатра (postgresql -> elasticsearch)
 
+## Архитектура
+
+![Архитектура](https://github.com/georotor/movies_etl/blob/main/doc/schema.png?raw=true)
+
+## Запуск сервиса
+
 Для запуска потребуется два файла с переменными окружения:
 
 - `.env` с настройками для ETL, запускаемого в контейнере `etl`:
